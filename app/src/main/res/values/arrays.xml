@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="sort_entries">
+        <item>Ім&#8217;я (А→Я)</item>
+        <item>Ім&#8217;я (Я→А)</item>
+        <item>Дата (нові)</item>
+        <item>Дата (старі)</item>
+        <item>Розмір (↑)</item>
+        <item>Розмір (↓)</item>
+        <item>Тип</item>
+    </string-array>
+    <string-array name="sort_values">
+        <item>NAME_ASC</item>
+        <item>NAME_DESC</item>
+        <item>DATE_NEW</item>
+        <item>DATE_OLD</item>
+        <item>SIZE_ASC</item>
+        <item>SIZE_DESC</item>
+        <item>TYPE</item>
+    </string-array>
+</resources>

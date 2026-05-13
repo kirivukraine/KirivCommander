@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="md_primary">#90CAF9</color>
+    <color name="md_on_primary">#003258</color>
+    <color name="md_primary_container">#1565C0</color>
+    <color name="md_secondary">#A5D6A7</color>
+    <color name="md_tertiary">#CE93D8</color>
+    <color name="md_surface">#1C1C1E</color>
+    <color name="md_background">#121212</color>
+    <color name="badge_root_bg">#7F1D1D</color>
+    <color name="badge_root_text">#FCA5A5</color>
+    <color name="warning_bg">#7F3D00</color>
+    <color name="warning_text">#FFCC80</color>
+    <color name="folder_color">#FFB74D</color>
+    <color name="image_color">#81C784</color>
+    <color name="video_color">#E57373</color>
+    <color name="audio_color">#64B5F6</color>
+    <color name="selected_bg">#1A90CAF9</color>
+</resources>
