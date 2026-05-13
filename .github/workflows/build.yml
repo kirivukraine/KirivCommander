@@ -9,11 +9,11 @@ on:
 
 jobs:
   build:
-    name: Build Debug & Release APK
+    name: Build APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -21,26 +21,20 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
+      - name: Setup Gradle 8.4
+        uses: gradle/actions/setup-gradle@v3
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          gradle-version: '8.4'
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: Build Release APK (unsigned)
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: gradle assembleRelease --no-daemon --stacktrace
+
+      - name: List APKs
+        run: find . -name "*.apk" -exec ls -lh {} \;
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
@@ -56,21 +50,14 @@ jobs:
           path: app/build/outputs/apk/release/app-release-unsigned.apk
           retention-days: 30
 
-      - name: Get APK info
-        run: |
-          echo "=== Debug APK ==="
-          ls -lh app/build/outputs/apk/debug/ || true
-          echo "=== Release APK ==="
-          ls -lh app/build/outputs/apk/release/ || true
-
   release:
-    name: Create GitHub Release
+    name: GitHub Release
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -78,53 +65,49 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Setup Gradle 8.4
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
 
       - name: Build Release APK
-        run: ./gradlew assembleRelease --no-daemon
+        run: gradle assembleRelease --no-daemon
 
       - name: Get version name
-        id: version
+        id: ver
         run: |
-          VERSION=$(grep "versionName" app/build.gradle | grep -o '".*"' | tr -d '"')
-          CODE=$(grep "versionCode" app/build.gradle | grep -o '[0-9]*')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "code=$CODE" >> $GITHUB_OUTPUT
-          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          VER=$(grep 'versionName' app/build.gradle | grep -o '"[^"]*"' | tr -d '"' | head -1)
+          echo "version=$VER" >> $GITHUB_OUTPUT
 
       - name: Rename APK
         run: |
           cp app/build/outputs/apk/release/app-release-unsigned.apk \
-             KirivCommander-v${{ steps.version.outputs.version }}.apk
+             KirivCommander-v${{ steps.ver.outputs.version }}.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: KirivCommander ${{ steps.version.outputs.tag }}
+          tag_name: v${{ steps.ver.outputs.version }}
+          name: KirivCommander v${{ steps.ver.outputs.version }}
           body: |
-            ## KirivCommander ${{ steps.version.outputs.tag }}
+            ## KirivCommander v${{ steps.ver.outputs.version }}
             **by KirivSoft / Іван Кіранчук**
 
-            ### Встановлення
-            1. Завантажте APK файл нижче
-            2. На Android: Налаштування → Безпека → Невідомі джерела
-            3. Встановіть APK
+            ### Встановлення APK
+            1. Завантажте файл нижче
+            2. Android → Налаштування → Безпека → Невідомі джерела ✓
+            3. Відкрийте APK → Встановити
 
-            ### Що нового
+            ### Функції
             - Двопанельний файловий менеджер
-            - Root-доступ через libsu
-            - Вбудований текстовий редактор
+            - Root-доступ (libsu)
+            - Текстовий редактор з пошуком
             - ExoPlayer медіаплеєр
-            - Переглядач фото та PDF
-            - FTP/SMB/SFTP підключення
-            - Розширений пошук (regex, по вмісту)
-
-            > APK не підписаний — для продакшн використання налаштуйте keystore у secrets.
-          files: KirivCommander-v${{ steps.version.outputs.version }}.apk
+            - Переглядач фото, PDF
+            - FTP / SMB / SFTP
+            - Пошук: regex, по вмісту
+          files: KirivCommander-v${{ steps.ver.outputs.version }}.apk
           draft: false
           prerelease: false
         env:
