@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="44dp"
+    android:background="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="8dp">
+
+    <!-- Чекбокс вибору -->
+    <CheckBox
+        android:id="@+id/checkBox"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="4dp"
+        android:visibility="gone"/>
+
+    <!-- Іконка типу файлу -->
+    <ImageView
+        android:id="@+id/fileIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="8dp"
+        android:scaleType="centerInside"
+        tools:src="@drawable/ic_folder"/>
+
+    <!-- Назва файлу -->
+    <TextView
+        android:id="@+id/fileName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="middle"
+        android:maxLines="1"
+        android:textSize="13sp"
+        tools:text="Documents"/>
+
+    <!-- Бейдж root -->
+    <TextView
+        android:id="@+id/rootBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/bg_badge_root"
+        android:paddingHorizontal="4dp"
+        android:paddingVertical="1dp"
+        android:text="ROOT"
+        android:textColor="@color/badge_root_text"
+        android:textSize="8sp"
+        android:visibility="gone"/>
+
+    <!-- Розмір файлу -->
+    <TextView
+        android:id="@+id/fileSize"
+        android:layout_width="52dp"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:textColor="?attr/colorOutline"
+        android:textSize="11sp"
+        tools:text="1.2 МБ"/>
+
+    <!-- Дата -->
+    <TextView
+        android:id="@+id/fileDate"
+        android:layout_width="86dp"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:textColor="?attr/colorOutline"
+        android:textSize="10sp"
+        tools:text="01.01.2024 12:00"/>
+
+</LinearLayout>
