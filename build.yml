@@ -1,0 +1,131 @@
+name: Build KirivCommander APK
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Debug & Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Build Release APK (unsigned)
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KirivCommander-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KirivCommander-release-unsigned
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          retention-days: 30
+
+      - name: Get APK info
+        run: |
+          echo "=== Debug APK ==="
+          ls -lh app/build/outputs/apk/debug/ || true
+          echo "=== Release APK ==="
+          ls -lh app/build/outputs/apk/release/ || true
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Get version name
+        id: version
+        run: |
+          VERSION=$(grep "versionName" app/build.gradle | grep -o '".*"' | tr -d '"')
+          CODE=$(grep "versionCode" app/build.gradle | grep -o '[0-9]*')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "code=$CODE" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Rename APK
+        run: |
+          cp app/build/outputs/apk/release/app-release-unsigned.apk \
+             KirivCommander-v${{ steps.version.outputs.version }}.apk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: KirivCommander ${{ steps.version.outputs.tag }}
+          body: |
+            ## KirivCommander ${{ steps.version.outputs.tag }}
+            **by KirivSoft / Іван Кіранчук**
+
+            ### Встановлення
+            1. Завантажте APK файл нижче
+            2. На Android: Налаштування → Безпека → Невідомі джерела
+            3. Встановіть APK
+
+            ### Що нового
+            - Двопанельний файловий менеджер
+            - Root-доступ через libsu
+            - Вбудований текстовий редактор
+            - ExoPlayer медіаплеєр
+            - Переглядач фото та PDF
+            - FTP/SMB/SFTP підключення
+            - Розширений пошук (regex, по вмісту)
+
+            > APK не підписаний — для продакшн використання налаштуйте keystore у secrets.
+          files: KirivCommander-v${{ steps.version.outputs.version }}.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
